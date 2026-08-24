@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Takip Farkı</title>
+<style>
+  :root{
+    --bg:#171f1c;
+    --panel:#1f2b26;
+    --line:#2c3a34;
+    --ink:#e9ede9;
+    --dim:#8ea89b;
+    --amber:#e3a23c;
+    --amber-dim:#a97c33;
+    --bad:#d9714e;
+    --good:#5fae86;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    min-height:100vh;
+    padding:0 0 60px;
+  }
+  header{
+    padding:28px 20px 18px;
+    border-bottom:1px solid var(--line);
+  }
+  .eyebrow{
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--amber);
+    font-weight:700;
+    margin-bottom:8px;
+  }
+  h1{
+    font-size:26px;
+    line-height:1.15;
+    margin:0 0 6px;
+    letter-spacing:-0.01em;
+  }
+  .sub{
+    color:var(--dim);
+    font-size:14px;
+    line-height:1.5;
+    max-width:46ch;
+  }
+  main{padding:20px;max-width:640px;margin:0 auto;}
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:18px;
+    margin-bottom:16px;
+  }
+  .step-num{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:22px;height:22px;
+    border-radius:50%;
+    background:var(--amber);
+    color:#1a1a1a;
+    font-size:12px;
+    font-weight:800;
+    margin-right:8px;
+    flex-shrink:0;
+  }
+  .step-title{
+    display:flex;
+    align-items:center;
+    font-weight:700;
+    font-size:15px;
+    margin-bottom:8px;
+  }
+  .step-body{
+    color:var(--dim);
+    font-size:13.5px;
+    line-height:1.55;
+    margin-left:30px;
+  }
+  .step-body code{
+    background:#0f1512;
+    border:1px solid var(--line);
+    padding:1px 6px;
+    border-radius:5px;
+    color:var(--ink);
+    font-size:12.5px;
+  }
+
+  #drop{
+    border:1.5px dashed var(--amber-dim);
+    border-radius:14px;
+    padding:36px 20px;
+    text-align:center;
+    cursor:pointer;
+    transition:.15s;
+  }
+  #drop.over{border-color:var(--amber);background:#22301f;}
+  #drop .big{font-size:15px;font-weight:700;margin-bottom:4px;}
+  #drop .small{font-size:12.5px;color:var(--dim);}
+  input[type=file]{display:none;}
+
+  .status{
+    font-size:13px;
+    color:var(--dim);
+    margin-top:10px;
+    min-height:18px;
+  }
+  .status.err{color:var(--bad);}
+  .status.ok{color:var(--good);}
+
+  #results{display:none;}
+  .stat-row{
+    display:flex;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .stat{
+    flex:1;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px 10px;
+    text-align:center;
+  }
+  .stat .n{font-size:22px;font-weight:800;letter-spacing:-.02em;}
+  .stat .l{font-size:10.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-top:2px;}
+  .stat.bad .n{color:var(--bad);}
+
+  .list-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin:22px 0 10px;
+  }
+  .list-head h2{font-size:16px;margin:0;}
+  .actions{display:flex;gap:8px;}
+  .btn{
+    background:var(--amber);
+    color:#1a1a1a;
+    border:none;
+    border-radius:9px;
+    padding:9px 14px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .btn.ghost{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--ink);
+  }
+  ul.names{list-style:none;margin:0;padding:0;}
+  ul.names li{
+    border-bottom:1px solid var(--line);
+  }
+  ul.names li a{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:12px 4px;
+    color:var(--ink);
+    text-decoration:none;
+    font-size:14.5px;
+  }
+  ul.names li a:active{background:#22302a;}
+  ul.names li a .arrow{color:var(--dim);font-size:14px;}
+
+  .empty{
+    color:var(--dim);
+    font-size:13.5px;
+    padding:20px 4px;
+    text-align:center;
+  }
+  #report{margin-top:12px;}
+  .rep-title{
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--dim);
+    margin-bottom:6px;
+  }
+  .rep-row{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    font-size:12px;
+    color:var(--dim);
+    padding:4px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .rep-row span:first-child{word-break:break-all;}
+  .rep-row .rep-zero{color:var(--bad);flex-shrink:0;}
+
+  .diffblock{margin-top:26px;}
+  .diffblock h3{font-size:13px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px;}
+  .tag{
+    display:inline-block;
+    font-size:10.5px;
+    font-weight:800;
+    padding:2px 7px;
+    border-radius:5px;
+    margin-left:8px;
+  }
+  .tag.left{background:#3a2420;color:var(--bad);}
+  .tag.joined{background:#203327;color:var(--good);}
+
+  footer{
+    text-align:center;
+    color:var(--dim);
+    font-size:11.5px;
+    padding:30px 20px 0;
+    line-height:1.6;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Instagram · Yerel Araç · sürüm 4</div>
+  <h1>Kimler geri takip etmiyor?</h1>
+  <div class="sub">Instagram'ın resmi veri indirmesindeki JSON dosyalarını doğrudan seç. Hiçbir dosya internete gitmiyor — her şey bu sayfanın içinde, telefonunda işleniyor.</div>
+</header>
+
+<main>
+
+  <div class="card">
+    <div class="step-title"><span class="step-num">1</span>Veriyi iste</div>
+    <div class="step-body">
+      Instagram → Ayarlar → Hesap Merkezi → Bilgileriniz ve izinler → Bilgilerinizi indirin.
+      <b>Bazı bilgileriniz</b> → yalnızca <b>Followers and following</b> seç.
+      Format: <code>JSON</code>. Tarih aralığı: <code>All time</code>.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="step-title"><span class="step-num">2</span>JSON dosyalarını seç</div>
+    <div class="step-body" style="margin-bottom:14px;">
+      İndirilen dosyada <code>connections/followers_and_following/</code> klasörünü aç.
+      <code>following.json</code> ve kaç tane varsa <code>followers_1.json</code>, <code>followers_2.json</code>...
+      dosyalarını <b>hepsini birden seçip</b> aşağıya yükle.
+    </div>
+    <div id="drop">
+      <div class="big">JSON dosyalarını seç</div>
+      <div class="small">following.json + followers_*.json — hepsini birlikte seç</div>
+      <input type="file" id="file" accept=".json" multiple>
+    </div>
+    <div class="status" id="status"></div>
+    <div id="report"></div>
+    <button class="btn ghost" id="reset-btn" style="margin-top:12px;width:100%;">Seçimi sıfırla</button>
+  </div>
+
+  <div id="results">
+    <div class="stat-row">
+      <div class="stat"><div class="n" id="s-following">–</div><div class="l">Takip Edilen</div></div>
+      <div class="stat"><div class="n" id="s-followers">–</div><div class="l">Takipçi</div></div>
+      <div class="stat bad"><div class="n" id="s-nonfollow">–</div><div class="l">Geri Takip Yok</div></div>
+    </div>
+
+    <div class="list-head">
+      <h2>Seni geri takip etmeyenler</h2>
+      <div class="actions">
+        <button class="btn ghost" id="copy-btn">Kopyala</button>
+        <button class="btn" id="csv-btn">CSV</button>
+      </div>
+    </div>
+    <ul class="names" id="nonfollow-list"></ul>
+
+    <div class="diffblock" id="diffblock" style="display:none;">
+      <h3 id="diff-when"></h3>
+      <ul class="names" id="diff-list"></ul>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  Bu sayfa dosyalarını hiçbir sunucuya göndermez, hiçbir yere yüklemez.<br>
+  Karşılaştırma için önceki sonuç yalnızca bu tarayıcıda (bu telefonda) saklanır.
+</footer>
+
+<script>
+const dropEl = document.getElementById('drop');
+const fileEl = document.getElementById('file');
+const statusEl = document.getElementById('status');
+const resultsEl = document.getElementById('results');
+
+dropEl.addEventListener('click', () => fileEl.click());
+['dragover','dragenter'].forEach(ev => dropEl.addEventListener(ev, e => { e.preventDefault(); dropEl.classList.add('over'); }));
+['dragleave','drop'].forEach(ev => dropEl.addEventListener(ev, e => { e.preventDefault(); dropEl.classList.remove('over'); }));
+dropEl.addEventListener('drop', e => { if (e.dataTransfer.files.length) handleFiles([...e.dataTransfer.files]); });
+fileEl.addEventListener('change', e => { if (e.target.files.length) handleFiles([...e.target.files]); });
+
+function setStatus(msg, kind) {
+  statusEl.textContent = msg;
+  statusEl.className = 'status' + (kind ? ' ' + kind : '');
+}
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+  state.followers = new Set();
+  state.following = new Set();
+  state.report = [];
+  fileEl.value = '';
+  renderReport();
+  resultsEl.style.display = 'none';
+  setStatus('Sıfırlandı. Dosyaları yeniden seç.');
+});
+
+function extractUsernames(json) {
+  const out = new Set();
+  const via = new Set();
+
+  function usernameFromHref(href) {
+    const m = href.match(/instagram\.com\/(?:_u\/)?([^\/?#\s]+)/i);
+    if (!m || !m[1]) return '';
+    try { return decodeURIComponent(m[1]); } catch (e) { return m[1]; }
+  }
+
+  function walk(node) {
+    if (Array.isArray(node)) {
+      for (const item of node) walk(item);
+      return;
+    }
+    if (!node || typeof node !== 'object') return;
+
+    if (Array.isArray(node.string_list_data)) {
+      let gotAny = false;
+      for (const item of node.string_list_data) {
+        if (!item || typeof item !== 'object') continue;
+        let name = '';
+        if (typeof item.value === 'string' && item.value.trim()) {
+          name = item.value; via.add('value');
+        } else if (typeof item.href === 'string') {
+          name = usernameFromHref(item.href); if (name) via.add('href');
+        }
+        if (name && name.trim()) {
+          out.add(name.trim().toLowerCase());
+          gotAny = true;
+        }
+      }
+      if (!gotAny && typeof node.title === 'string' && node.title.trim()) {
+        out.add(node.title.trim().toLowerCase());
+        via.add('title');
+      }
+    }
+
+    for (const value of Object.values(node)) walk(value);
+  }
+
+  walk(json);
+  out.via = [...via].join('+') || 'yok';
+  return out;
+}
+
+function readFileAsText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(file);
+  });
+}
+
+const state = { followers: new Set(), following: new Set(), report: [] };
+
+function renderReport() {
+  const el = document.getElementById('report');
+  if (!state.report.length) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div class="rep-title">Okunan dosyalar</div>' + state.report.map(r =>
+    `<div class="rep-row"><span>${r.name}</span><span class="${r.n ? '' : 'rep-zero'}">${r.note || r.n + ' kayıt'}</span></div>`
+  ).join('');
+}
+
+async function handleFiles(files) {
+  setStatus('Dosyalar okunuyor…');
+  resultsEl.style.display = 'none';
+
+  const jsonFiles = files.filter(f => f.name.toLowerCase().endsWith('.json'));
+  if (jsonFiles.length === 0) {
+    setStatus('JSON dosyası seçilmedi.', 'err');
+    return;
+  }
+
+  for (const file of jsonFiles) {
+    const base = file.name.toLowerCase();
+    const isFollowers = base.startsWith('followers');
+    const isFollowing = base.startsWith('following');
+
+    if (!isFollowers && !isFollowing) {
+      state.report.push({ name: file.name, n: 0, note: 'atlandı (ilgisiz dosya)' });
+      continue;
+    }
+
+    let json;
+    try {
+      const content = await readFileAsText(file);
+      if (!content || !content.trim()) {
+        state.report.push({ name: file.name, n: 0, note: 'boş okundu (iCloud’dan indirilmemiş olabilir)' });
+        continue;
+      }
+      json = JSON.parse(content);
+    } catch (e) {
+      state.report.push({ name: file.name, n: 0, note: 'okunamadı: ' + e.message });
+      continue;
+    }
+
+    const found = extractUsernames(json);
+    found.forEach(u => (isFollowers ? state.followers : state.following).add(u));
+    state.report.push({ name: file.name, n: found.size, note: found.size ? `${found.size} kayıt (${found.via})` : null });
+  }
+
+  renderReport();
+
+  if (state.following.size === 0 && state.followers.size === 0) {
+    setStatus('Hiçbir kullanıcı adı okunamadı. Aşağıdaki dosya raporuna bak.', 'err');
+    return;
+  }
+  if (state.following.size === 0) {
+    setStatus(`${state.followers.size} takipçi okundu. Şimdi following.json dosyasını da seç.`, 'err');
+    return;
+  }
+  if (state.followers.size === 0) {
+    setStatus(`${state.following.size} takip edilen okundu. Şimdi followers_*.json dosyalarını da seç.`, 'err');
+    return;
+  }
+
+  setStatus(`Tamam — ${state.following.size} takip edilen, ${state.followers.size} takipçi.`, 'ok');
+  render(state.followers, state.following);
+}
+
+function render(followers, following) {
+  const nonFollow = [...following].filter(u => !followers.has(u)).sort();
+
+  document.getElementById('s-following').textContent = following.size;
+  document.getElementById('s-followers').textContent = followers.size;
+  document.getElementById('s-nonfollow').textContent = nonFollow.length;
+
+  const listEl = document.getElementById('nonfollow-list');
+  listEl.innerHTML = '';
+  if (nonFollow.length === 0) {
+    listEl.innerHTML = '<div class="empty">Herkes seni geri takip ediyor.</div>';
+  } else {
+    for (const u of nonFollow) {
+      const li = document.createElement('li');
+      li.innerHTML = `<a href="https://instagram.com/${u}" target="_blank" rel="noopener">@${u}<span class="arrow">↗</span></a>`;
+      listEl.appendChild(li);
+    }
+  }
+
+  document.getElementById('copy-btn').onclick = () => {
+    navigator.clipboard.writeText(nonFollow.map(u => '@' + u).join('\n'));
+    setStatus('Liste panoya kopyalandı.', 'ok');
+  };
+  document.getElementById('csv-btn').onclick = () => {
+    const csv = 'username,profil\n' + nonFollow.map(u => `${u},https://instagram.com/${u}`).join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'takip_etmeyenler.csv';
+    a.click();
+  };
+
+  showDiffAgainstPrevious(followers, following);
+  saveSnapshot(followers, following);
+
+  resultsEl.style.display = 'block';
+}
+
+function showDiffAgainstPrevious(followers, following) {
+  const raw = localStorage.getItem('ig_takip_snapshot');
+  const diffBlock = document.getElementById('diffblock');
+  if (!raw) { diffBlock.style.display = 'none'; return; }
+
+  let prev;
+  try { prev = JSON.parse(raw); } catch { diffBlock.style.display = 'none'; return; }
+
+  const prevFollowers = new Set(prev.followers || []);
+  const left = [...prevFollowers].filter(u => !followers.has(u)).sort();
+  const joined = [...followers].filter(u => !prevFollowers.has(u)).sort();
+
+  const when = new Date(prev.date);
+  document.getElementById('diff-when').textContent =
+    `${when.toLocaleDateString('tr-TR')} tarihli kayda göre değişim`;
+
+  const diffList = document.getElementById('diff-list');
+  diffList.innerHTML = '';
+  if (left.length === 0 && joined.length === 0) {
+    diffList.innerHTML = '<div class="empty">Değişiklik yok.</div>';
+  } else {
+    for (const u of left) {
+      const li = document.createElement('li');
+      li.innerHTML = `<a href="https://instagram.com/${u}" target="_blank" rel="noopener">@${u}<span class="tag left">BIRAKTI</span></a>`;
+      diffList.appendChild(li);
+    }
+    for (const u of joined) {
+      const li = document.createElement('li');
+      li.innerHTML = `<a href="https://instagram.com/${u}" target="_blank" rel="noopener">@${u}<span class="tag joined">YENİ</span></a>`;
+      diffList.appendChild(li);
+    }
+  }
+  diffBlock.style.display = 'block';
+}
+
+function saveSnapshot(followers, following) {
+  localStorage.setItem('ig_takip_snapshot', JSON.stringify({
+    date: new Date().toISOString(),
+    followers: [...followers],
+    following: [...following],
+  }));
+}
+</script>
+</body>
+</html>
