@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Takip Farkı</title>
+<style>
+  :root{
+    --bg:#171f1c;
+    --panel:#1f2b26;
+    --line:#2c3a34;
+    --ink:#e9ede9;
+    --dim:#8ea89b;
+    --amber:#e3a23c;
+    --bad:#d9714e;
+    --good:#5fae86;
+    --blue:#6aa6c8;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    min-height:100vh;
+    padding:0 0 50px;
+  }
+  header{padding:26px 20px 16px;border-bottom:1px solid var(--line);}
+  .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);font-weight:700;margin-bottom:8px;}
+  h1{font-size:25px;line-height:1.15;margin:0 0 6px;letter-spacing:-0.01em;}
+  .sub{color:var(--dim);font-size:13.5px;line-height:1.5;}
+  main{padding:20px;max-width:640px;margin:0 auto;}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px;}
+  .card h2{font-size:14px;margin:0 0 4px;}
+  .card p{color:var(--dim);font-size:12.5px;line-height:1.5;margin:0 0 12px;}
+  .card p code{background:#0f1512;border:1px solid var(--line);padding:1px 5px;border-radius:5px;color:var(--ink);font-size:12px;}
+
+  #drop{border:1.5px dashed #a97c33;border-radius:12px;padding:22px 16px;text-align:center;cursor:pointer;}
+  #drop .big{font-size:14.5px;font-weight:700;margin-bottom:3px;}
+  #drop .small{font-size:12px;color:var(--dim);}
+  input[type=file]{display:none;}
+
+  .status{font-size:12.5px;color:var(--dim);margin-top:10px;line-height:1.5;}
+  .status.err{color:var(--bad);}
+  .status.ok{color:var(--good);}
+
+  .rep-row{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;color:var(--dim);padding:4px 0;border-bottom:1px solid var(--line);}
+  .rep-row span:first-child{word-break:break-all;}
+
+  .stat-row{display:flex;gap:10px;margin-bottom:8px;}
+  .stat{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 8px;text-align:center;}
+  .stat .n{font-size:21px;font-weight:800;letter-spacing:-.02em;}
+  .stat .l{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.07em;margin-top:2px;}
+  .stat.bad .n{color:var(--bad);}
+  .meta{font-size:11.5px;color:var(--dim);text-align:center;margin-bottom:18px;line-height:1.6;}
+
+  .list-head{display:flex;justify-content:space-between;align-items:center;margin:20px 0 4px;gap:10px;}
+  .list-head h2{font-size:16px;margin:0;}
+  .actions{display:flex;gap:8px;}
+  .btn{background:var(--amber);color:#1a1a1a;border:none;border-radius:9px;padding:9px 13px;font-size:12.5px;font-weight:700;cursor:pointer;}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);}
+  .legend{font-size:11.5px;color:var(--dim);margin:0 0 6px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .legend span{display:flex;align-items:center;gap:5px;}
+  .legend svg{width:14px;height:14px;}
+
+  ul.names{list-style:none;margin:0;padding:0;}
+  ul.names li{border-bottom:1px solid var(--line);}
+  .row{display:flex;align-items:center;gap:6px;padding:6px 0;}
+  .uname{flex:1;color:var(--ink);text-decoration:none;font-size:15.5px;padding:14px 2px;display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;}
+  .uname span.arrow{color:var(--dim);font-size:13px;flex-shrink:0;}
+  .uname b{font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .uname:active{opacity:.6;}
+  .ico{width:40px;height:40px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid var(--line);border-radius:10px;color:var(--dim);cursor:pointer;padding:0;}
+  .ico svg{width:17px;height:17px;}
+  .ico:active{background:#2a3831;}
+  .ico.x:active{color:var(--bad);border-color:var(--bad);}
+  .ico.p:active{color:var(--blue);border-color:var(--blue);}
+
+  .empty{color:var(--dim);font-size:13px;padding:18px 4px;text-align:center;}
+
+  details{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-top:12px;padding:0 14px;}
+  summary{padding:14px 0;font-size:14px;font-weight:600;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;}
+  summary::-webkit-details-marker{display:none;}
+  summary .cnt{color:var(--dim);font-size:12.5px;font-weight:400;}
+  details ul.names li:last-child{border-bottom:none;}
+  .undo{background:transparent;border:1px solid var(--line);color:var(--dim);border-radius:9px;padding:8px 11px;font-size:11.5px;cursor:pointer;flex-shrink:0;}
+
+  .toolbar{display:flex;gap:8px;margin-top:16px;}
+  .toolbar .btn{flex:1;}
+  footer{text-align:center;color:var(--dim);font-size:11px;padding:24px 20px 0;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Instagram · Yerel Araç · sürüm 5</div>
+  <h1>Kimler geri takip etmiyor?</h1>
+  <div class="sub">Veriler telefonunda saklanır, hiçbir yere gönderilmez. İşaretlediklerin sonraki içe aktarmalarda da hatırlanır.</div>
+</header>
+
+<main>
+
+  <div class="card">
+    <h2>Veri içe aktar</h2>
+    <p>
+      Hesap Merkezi → Bilgilerinizi indirin → <b>Followers and following</b>, format <code>JSON</code>, aralık <code>All time</code>.
+      Gelen dosyadaki <code>following.json</code> ve <code>followers_*.json</code> dosyalarını seç.
+    </p>
+    <div id="drop">
+      <div class="big">JSON dosyalarını seç</div>
+      <div class="small">following.json + followers_*.json</div>
+      <input type="file" id="file" accept=".json" multiple>
+    </div>
+    <div class="status" id="status"></div>
+    <div id="report"></div>
+  </div>
+
+  <div id="results" style="display:none;">
+    <div class="stat-row">
+      <div class="stat"><div class="n" id="s-following">–</div><div class="l">Takip Edilen</div></div>
+      <div class="stat"><div class="n" id="s-followers">–</div><div class="l">Takipçi</div></div>
+      <div class="stat bad"><div class="n" id="s-nonfollow">–</div><div class="l">İncelenecek</div></div>
+    </div>
+    <div class="meta" id="meta"></div>
+
+    <div class="list-head">
+      <h2>Seni geri takip etmeyenler</h2>
+      <div class="actions">
+        <button class="btn ghost" id="copy-btn">Kopyala</button>
+        <button class="btn" id="csv-btn">CSV</button>
+      </div>
+    </div>
+    <div class="legend">
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg> kapalı hesap</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg> sayfa / marka</span>
+      <span>isme dokun → profili aç</span>
+    </div>
+    <ul class="names" id="nonfollow-list"></ul>
+
+    <details id="closed-box">
+      <summary>Kapalı hesaplar <span class="cnt" id="closed-cnt"></span></summary>
+      <ul class="names" id="closed-list"></ul>
+    </details>
+
+    <details id="pages-box">
+      <summary>Takip ettiğim sayfalar <span class="cnt" id="pages-cnt"></span></summary>
+      <ul class="names" id="pages-list"></ul>
+    </details>
+
+    <div class="toolbar">
+      <button class="btn ghost" id="backup-btn">Yedek indir</button>
+      <button class="btn ghost" id="restore-btn">Yedek yükle</button>
+      <input type="file" id="restore-file" accept=".json">
+    </div>
+    <div class="toolbar">
+      <button class="btn ghost" id="wipe-btn" style="color:var(--bad);">Tüm verileri sil</button>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  İşaretlemelerin bu tarayıcıda saklanır. Uzun süre açmazsan iOS bunları temizleyebilir —<br>
+  emek verdiğin listeleri ara sıra "Yedek indir" ile saklaman iyi olur.
+</footer>
+
+<script>
+const KEY = 'igTakipV5';
+const fileEl = document.getElementById('file');
+const statusEl = document.getElementById('status');
+const resultsEl = document.getElementById('results');
+
+let store = { updated: null, followers: [], following: [], closed: [], pages: [] };
+
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) {
+      const p = JSON.parse(raw);
+      store = {
+        updated: p.updated || null,
+        followers: p.followers || [],
+        following: p.following || [],
+        closed: p.closed || [],
+        pages: p.pages || [],
+      };
+    }
+  } catch (e) {}
+}
+
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(store)); }
+  catch (e) { setStatus('Kaydedilemedi (depolama dolu olabilir).', 'err'); }
+}
+
+function setStatus(msg, kind) {
+  statusEl.textContent = msg;
+  statusEl.className = 'status' + (kind ? ' ' + kind : '');
+}
+
+/* ---------- JSON okuma ---------- */
+
+function extractUsernames(json) {
+  const out = new Set();
+  const via = new Set();
+
+  function fromHref(href) {
+    const m = href.match(/instagram\.com\/(?:_u\/)?([^\/?#\s]+)/i);
+    if (!m || !m[1]) return '';
+    try { return decodeURIComponent(m[1]); } catch (e) { return m[1]; }
+  }
+
+  (function walk(node) {
+    if (Array.isArray(node)) { for (const i of node) walk(i); return; }
+    if (!node || typeof node !== 'object') return;
+
+    if (Array.isArray(node.string_list_data)) {
+      let got = false;
+      for (const item of node.string_list_data) {
+        if (!item || typeof item !== 'object') continue;
+        let name = '';
+        if (typeof item.value === 'string' && item.value.trim()) { name = item.value; via.add('value'); }
+        else if (typeof item.href === 'string') { name = fromHref(item.href); if (name) via.add('href'); }
+        if (name && name.trim()) { out.add(name.trim().toLowerCase()); got = true; }
+      }
+      if (!got && typeof node.title === 'string' && node.title.trim()) {
+        out.add(node.title.trim().toLowerCase()); via.add('title');
+      }
+    }
+    for (const v of Object.values(node)) walk(v);
+  })(json);
+
+  out.via = [...via].join('+') || 'yok';
+  return out;
+}
+
+function readText(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = () => rej(r.error);
+    r.readAsText(file);
+  });
+}
+
+/* ---------- içe aktarma ---------- */
+
+document.getElementById('drop').addEventListener('click', () => fileEl.click());
+fileEl.addEventListener('change', e => { if (e.target.files.length) importFiles([...e.target.files]); });
+
+async function importFiles(files) {
+  setStatus('Okunuyor…');
+  const report = [];
+  const followers = new Set();
+  const following = new Set();
+
+  for (const file of files) {
+    const base = file.name.toLowerCase();
+    if (!base.endsWith('.json')) continue;
+
+    const isFollowers = base.startsWith('followers');
+    const isFollowing = base.startsWith('following');
+    if (!isFollowers && !isFollowing) { report.push([file.name, 'atlandı']); continue; }
+
+    let json;
+    try {
+      const txt = await readText(file);
+      if (!txt || !txt.trim()) { report.push([file.name, 'boş okundu']); continue; }
+      json = JSON.parse(txt);
+    } catch (err) { report.push([file.name, 'okunamadı']); continue; }
+
+    const found = extractUsernames(json);
+    found.forEach(u => (isFollowers ? followers : following).add(u));
+    report.push([file.name, `${found.size} kayıt (${found.via})`]);
+  }
+
+  document.getElementById('report').innerHTML =
+    report.map(r => `<div class="rep-row"><span>${r[0]}</span><span>${r[1]}</span></div>`).join('');
+
+  if (!following.size && !followers.size) { setStatus('Kullanıcı adı okunamadı.', 'err'); return; }
+  if (!following.size) { setStatus('following.json seçilmedi.', 'err'); return; }
+  if (!followers.size) { setStatus('followers_*.json seçilmedi.', 'err'); return; }
+
+  store.followers = [...followers];
+  store.following = [...following];
+  store.updated = new Date().toISOString();
+  save();
+  fileEl.value = '';
+  setStatus(`Güncellendi — ${following.size} takip edilen, ${followers.size} takipçi. İşaretlemelerin korundu.`, 'ok');
+  render();
+}
+
+/* ---------- işaretleme ---------- */
+
+function mark(user, list) {
+  if (!store[list].includes(user)) store[list].push(user);
+  save();
+  render();
+}
+
+function unmark(user, list) {
+  store[list] = store[list].filter(u => u !== user);
+  save();
+  render();
+}
+
+function row(user, buttons) {
+  const li = document.createElement('li');
+  const div = document.createElement('div');
+  div.className = 'row';
+  div.innerHTML =
+    `<a class="uname" href="https://instagram.com/${user}" target="_blank" rel="noopener"><b>@${user}</b><span class="arrow">↗</span></a>` + buttons;
+  li.appendChild(div);
+  return li;
+}
+
+const X_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+const P_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>';
+
+/* ---------- ekran ---------- */
+
+function render() {
+  if (!store.following.length && !store.followers.length) { resultsEl.style.display = 'none'; return; }
+
+  const followers = new Set(store.followers);
+  const closed = new Set(store.closed);
+  const pages = new Set(store.pages);
+
+  const nonFollow = store.following
+    .filter(u => !followers.has(u) && !closed.has(u) && !pages.has(u))
+    .sort();
+
+  document.getElementById('s-following').textContent = store.following.length;
+  document.getElementById('s-followers').textContent = store.followers.length;
+  document.getElementById('s-nonfollow').textContent = nonFollow.length;
+
+  const when = store.updated ? new Date(store.updated).toLocaleDateString('tr-TR') : '–';
+  document.getElementById('meta').textContent =
+    `Son içe aktarma: ${when} · ${store.closed.length} kapalı, ${store.pages.length} sayfa işaretli`;
+
+  const listEl = document.getElementById('nonfollow-list');
+  listEl.innerHTML = '';
+  if (!nonFollow.length) {
+    listEl.innerHTML = '<div class="empty">İncelenecek kimse kalmadı.</div>';
+  } else {
+    for (const u of nonFollow) {
+      listEl.appendChild(row(u,
+        `<button class="ico x" data-act="closed" data-u="${u}" aria-label="Kapalı hesap">${X_ICON}</button>` +
+        `<button class="ico p" data-act="pages" data-u="${u}" aria-label="Sayfa">${P_ICON}</button>`));
+    }
+  }
+
+  fillMarked('closed', 'closed-list', 'closed-cnt');
+  fillMarked('pages', 'pages-list', 'pages-cnt');
+
+  document.getElementById('copy-btn').onclick = () => {
+    navigator.clipboard.writeText(nonFollow.map(u => '@' + u).join('\n'));
+    setStatus('Liste kopyalandı.', 'ok');
+  };
+  document.getElementById('csv-btn').onclick = () => {
+    download('takip_etmeyenler.csv',
+      'username,profil\n' + nonFollow.map(u => `${u},https://instagram.com/${u}`).join('\n'), 'text/csv');
+  };
+
+  resultsEl.style.display = 'block';
+}
+
+function fillMarked(list, listId, cntId) {
+  const el = document.getElementById(listId);
+  const items = [...store[list]].sort();
+  document.getElementById(cntId).textContent = items.length;
+  el.innerHTML = '';
+  if (!items.length) { el.innerHTML = '<div class="empty">Boş.</div>'; return; }
+  for (const u of items) {
+    el.appendChild(row(u, `<button class="undo" data-undo="${list}" data-u="${u}">geri al</button>`));
+  }
+}
+
+document.addEventListener('click', e => {
+  const markBtn = e.target.closest('[data-act]');
+  if (markBtn) { e.preventDefault(); mark(markBtn.dataset.u, markBtn.dataset.act); return; }
+  const undoBtn = e.target.closest('[data-undo]');
+  if (undoBtn) { e.preventDefault(); unmark(undoBtn.dataset.u, undoBtn.dataset.undo); }
+});
+
+/* ---------- yedek ---------- */
+
+function download(name, text, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: type || 'application/json' }));
+  a.download = name;
+  a.click();
+}
+
+document.getElementById('backup-btn').onclick = () => {
+  download('ig_takip_yedek.json', JSON.stringify({ closed: store.closed, pages: store.pages }, null, 2));
+};
+
+const restoreFile = document.getElementById('restore-file');
+document.getElementById('restore-btn').onclick = () => restoreFile.click();
+restoreFile.addEventListener('change', async e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  try {
+    const data = JSON.parse(await readText(f));
+    (data.closed || []).forEach(u => { if (!store.closed.includes(u)) store.closed.push(u); });
+    (data.pages || []).forEach(u => { if (!store.pages.includes(u)) store.pages.push(u); });
+    save(); render();
+    setStatus('Yedek yüklendi.', 'ok');
+  } catch (err) { setStatus('Yedek okunamadı.', 'err'); }
+  restoreFile.value = '';
+});
+
+document.getElementById('wipe-btn').onclick = () => {
+  if (!confirm('Tüm veriler ve işaretlemeler silinecek. Emin misin?')) return;
+  localStorage.removeItem(KEY);
+  store = { updated: null, followers: [], following: [], closed: [], pages: [] };
+  document.getElementById('report').innerHTML = '';
+  resultsEl.style.display = 'none';
+  setStatus('Silindi.');
+};
+
+load();
+render();
+if (store.updated) setStatus('Kayıtlı veriler yüklendi. Yeni export geldiğinde üstten içe aktar.', 'ok');
+</script>
+</body>
+</html>
